@@ -1,0 +1,39 @@
+{
+  "hero": "/static/images/ui/hero.jpg",
+  "audience_main": "/static/images/ui/audience-main.jpg",
+  "users": {
+    "beginner": "/static/images/ui/user-beginner.jpg",
+    "a11y": "/static/images/ui/user-a11y.jpg",
+    "hands": "/static/images/ui/user-hands.jpg",
+    "student": "/static/images/ui/user-student.jpg"
+  },
+  "steps": {
+    "see": "/static/images/ui/step-see.jpg",
+    "shop": "/static/images/ui/step-shop.jpg",
+    "coach": "/static/images/ui/step-coach.jpg",
+    "grow": "/static/images/ui/step-grow.jpg"
+  },
+  "coach": {
+    "main": "/static/images/ui/coach-main.jpg",
+    "detail": "/static/images/ui/coach-detail.jpg"
+  },
+  "compare": {
+    "before": "/static/images/ui/before-ref.jpg",
+    "after": "/static/images/ui/after-ref.jpg"
+  },
+  "analyze_empty": "/static/images/ui/analyze-empty.jpg",
+  "products": {
+    "true-match-foundation": "/static/images/products/foundation.jpg",
+    "revitalift-serum": "/static/images/products/serum.jpg",
+    "color-riche-lipstick": "/static/images/products/lipstick.jpg",
+    "rouge-signature": "/static/images/products/lipgloss.jpg",
+    "infallible-blush": "/static/images/products/blush.jpg",
+    "paradise-mascara": "/static/images/products/mascara.jpg",
+    "la-palette-nude": "/static/images/products/eyeshadow.jpg",
+    "uv-defender": "/static/images/products/sunscreen.jpg",
+    "maybelline-fit-me": "/static/images/products/fitme.jpg",
+    "maybelline-superstay": "/static/images/products/vinyl.jpg",
+    "age-perfect-cream": "/static/images/products/cream.jpg",
+    "brow-artist": "/static/images/products/brow.jpg"
+  }
+}

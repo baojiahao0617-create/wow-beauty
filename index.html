@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WOW!美炸了 — 让美触手可及</title>
+<!-- 国内公网演示：不用 Google Fonts，避免一直卡在加载页 -->
+<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  background:#140E0C;color:#F7F0E8;line-height:1.65;overflow-x:hidden;
+  transition:font-size .2s ease,background .2s ease,color .2s ease;
+}
+body.large-text{font-size:115%}
+body.high-contrast{
+  --bg:#000;--bg-soft:#0d0d0d;--ink:#fff;--muted:#eee;
+  --rose:#ff6b81;--sand:#ffd27a;--line:rgba(255,255,255,.28);
+  background:#000;color:#fff;
+}
+::selection{background:#C45C6A;color:#fff}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:#C45C6A;border-radius:3px}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+img{max-width:100%;display:block}
+:root{
+  --bg:#140E0C;--bg-soft:#1C1411;--ink:#F7F0E8;--muted:#A8988C;
+  --rose:#C45C6A;--rose-deep:#9E3D4C;--sand:#D4A574;--cream:#F3E6D8;
+  --line:rgba(247,240,232,.1);--glass:rgba(255,255,255,.04);
+  --radius:18px;--ease:cubic-bezier(.25,.46,.45,.94);
+}
+.serif{font-family:Georgia,"Songti SC","SimSun",serif;font-weight:500;letter-spacing:-.02em}
+.caps{letter-spacing:.16em;text-transform:uppercase;font-size:.68rem;font-weight:500}
+
+.a11y-bar{position:fixed;bottom:1.1rem;right:1.1rem;z-index:300;display:flex;flex-direction:column;gap:.45rem}
+.a11y-bar button{
+  min-width:48px;min-height:48px;padding:.55rem .85rem;border-radius:999px;
+  border:1px solid var(--line);background:rgba(20,14,12,.88);backdrop-filter:blur(14px);
+  color:var(--ink);font-size:.7rem;letter-spacing:.06em;cursor:pointer;transition:.3s var(--ease);
+}
+.a11y-bar button:hover,.a11y-bar button.active{border-color:var(--sand);color:var(--sand)}
+
+#preloader{
+  position:fixed;inset:0;z-index:9999;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .7s ease,visibility .7s ease;
+}
+#preloader.loaded{opacity:0;visibility:hidden;pointer-events:none;display:none}
+.preloader-text{font-family:Georgia,"Songti SC",serif;font-size:clamp(1.8rem,4vw,3rem);color:var(--sand);letter-spacing:.28em}
+
+.api-pill{
+  position:fixed;top:.9rem;left:50%;transform:translateX(-50%);z-index:150;
+  padding:.35rem .9rem;border-radius:999px;font-size:.65rem;letter-spacing:.08em;
+  border:1px solid var(--line);background:rgba(20,14,12,.82);color:var(--muted);
+}
+.api-pill.ok{color:var(--sand);border-color:rgba(212,165,116,.45)}
+.api-pill.bad{color:#ff8a9a;border-color:rgba(255,107,129,.4)}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;padding:1.2rem 2.5rem;
+  display:flex;justify-content:space-between;align-items:center;transition:.35s var(--ease);
+}
+nav.scrolled{background:rgba(20,14,12,.9);backdrop-filter:blur(22px);border-bottom:1px solid var(--line)}
+.nav-logo{font-family:Georgia,"Songti SC",serif;font-size:1.35rem;letter-spacing:.04em}
+.nav-logo span{color:var(--rose)}
+.nav-links{display:flex;gap:1.8rem;list-style:none}
+.nav-links a{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;opacity:.55;transition:.3s}
+.nav-links a:hover{opacity:1;color:var(--sand)}
+.nav-cta{
+  padding:.55rem 1.1rem;border:1px solid var(--sand);border-radius:999px;
+  color:var(--sand);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;transition:.3s;
+}
+.nav-cta:hover{background:var(--sand);color:var(--bg)}
+.nav-toggle{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px}
+.nav-toggle span{width:22px;height:1.5px;background:var(--ink)}
+
+.hero{min-height:100vh;position:relative;display:flex;align-items:flex-end;overflow:hidden}
+.hero-media{
+  position:absolute;inset:0;z-index:0;
+  background:
+    linear-gradient(105deg,rgba(20,14,12,.88) 0%,rgba(20,14,12,.35) 45%,rgba(20,14,12,.45) 68%,rgba(20,14,12,.92) 100%),
+    linear-gradient(180deg,rgba(20,14,12,.2) 0%,rgba(20,14,12,.9) 100%),
+    url("/static/images/ui/hero.jpg?v=3") center center/cover no-repeat;
+  transform:scale(1.03);animation:heroZoom 22s ease-in-out infinite alternate;
+}
+@keyframes heroZoom{from{transform:scale(1.02)}to{transform:scale(1.07)}}
+.hero-inner{position:relative;z-index:1;width:100%;max-width:1200px;margin:0 auto;padding:7rem 2rem 4.5rem}
+.hero-brand{font-family:Georgia,"Songti SC",serif;font-size:clamp(3.2rem,9vw,7.2rem);line-height:.92;margin-bottom:1rem}
+.hero-brand em{font-style:italic;color:var(--sand);font-weight:400}
+.hero-desc{max-width:420px;color:rgba(247,240,232,.78);font-weight:300;font-size:clamp(.95rem,1.4vw,1.08rem);margin-bottom:1.8rem}
+.hero-actions{display:flex;flex-wrap:wrap;gap:.8rem}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
+  padding:.85rem 1.6rem;border-radius:999px;border:1px solid transparent;
+  font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:.35s var(--ease);
+  background:transparent;color:var(--ink);
+}
+.btn-primary{background:var(--rose);border-color:var(--rose);color:#fff}
+.btn-primary:hover{background:var(--rose-deep);transform:translateY(-2px)}
+.btn-ghost{border-color:rgba(247,240,232,.35)}
+.btn-ghost:hover{border-color:var(--sand);color:var(--sand)}
+.btn-sand{border-color:var(--sand);color:var(--sand)}
+.btn-sand:hover{background:var(--sand);color:var(--bg)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+.journey{
+  position:sticky;top:64px;z-index:90;background:rgba(20,14,12,.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);padding:.7rem 1rem;
+}
+.journey-track{max-width:1100px;margin:0 auto;display:flex;gap:.5rem;overflow-x:auto}
+.journey a{
+  flex:1;min-width:140px;text-align:center;padding:.65rem .5rem;border:1px solid var(--line);
+  border-radius:12px;font-size:.68rem;letter-spacing:.08em;color:var(--muted);transition:.3s;
+}
+.journey a strong{display:block;color:var(--ink);font-size:.78rem;letter-spacing:0;margin-bottom:.15rem;font-weight:500}
+.journey a:hover,.journey a.active{border-color:var(--rose);color:var(--sand);background:rgba(196,92,106,.08)}
+
+.section{padding:5.5rem 2rem;max-width:1200px;margin:0 auto}
+.section-head{margin-bottom:2.5rem;max-width:560px}
+.section-head .caps{color:var(--sand);margin-bottom:.7rem;display:block}
+.section-head h2{font-size:clamp(2rem,4.2vw,3.2rem);line-height:1.12;margin-bottom:.7rem}
+.section-head p{color:var(--muted);font-weight:300}
+
+.story-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2rem}
+.story-tile{position:relative;aspect-ratio:3/4;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line)}
+.story-tile img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.story-tile:hover img{transform:scale(1.06)}
+.story-tile figcaption{
+  position:absolute;left:0;right:0;bottom:0;padding:1.2rem 1rem;
+  background:linear-gradient(transparent,rgba(0,0,0,.85));
+}
+.story-tile .caps{color:var(--sand);margin-bottom:.25rem}
+.story-tile h3{font-size:1.05rem;font-weight:500}
+
+.audience{display:grid;grid-template-columns:1.1fr 1fr;gap:1.2rem;min-height:420px}
+.audience-hero{
+  position:relative;border-radius:var(--radius);overflow:hidden;min-height:360px;
+  background:url("/static/images/ui/audience-main.jpg") center/cover;
+}
+.audience-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(20,14,12,.15),rgba(20,14,12,.78))}
+.audience-hero .copy{position:absolute;z-index:1;left:1.5rem;right:1.5rem;bottom:1.5rem}
+.audience-hero h3{font-size:clamp(1.6rem,3vw,2.2rem);margin:.4rem 0}
+.audience-list{display:grid;gap:.8rem}
+.audience-item{
+  display:grid;grid-template-columns:88px 1fr;gap:.9rem;align-items:center;
+  padding:.7rem;border:1px solid var(--line);border-radius:14px;background:var(--glass);transition:.35s;
+}
+.audience-item:hover{border-color:rgba(196,92,106,.4);transform:translateX(4px)}
+.audience-item img{width:88px;height:72px;object-fit:cover;border-radius:10px}
+.audience-item h4{font-size:.95rem;font-weight:500;margin-bottom:.2rem}
+.audience-item p{font-size:.78rem;color:var(--muted);font-weight:300;line-height:1.55}
+
+.studio{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem}
+.panel{border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-soft);overflow:hidden;min-height:360px}
+.panel-media{position:relative;aspect-ratio:4/3;background:#0d0908}
+.panel-media img,.panel-media video{width:100%;height:100%;object-fit:cover}
+.panel-media .empty{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.6rem;color:var(--muted);
+  background:linear-gradient(160deg,rgba(20,14,12,.55),rgba(20,14,12,.78)),url("/static/images/ui/analyze-empty.jpg?v=7") center/cover;
+}
+.panel-body{padding:1.4rem 1.5rem 1.6rem}
+.panel-body h3{font-size:1.35rem;margin-bottom:.5rem}
+.panel-body p{color:var(--muted);font-size:.88rem;font-weight:300;margin-bottom:1.1rem}
+.analysis-box{
+  max-height:280px;overflow:auto;padding:1rem;border-radius:12px;
+  background:rgba(255,255,255,.03);border:1px solid var(--line);
+  font-size:.88rem;line-height:1.7;color:var(--muted);white-space:pre-wrap;
+}
+.analysis-box h2,.analysis-box h3{color:var(--ink);font-size:1rem;margin:1rem 0 .35rem}
+.status-line{font-size:.75rem;color:var(--sand);min-height:1.2em;margin-bottom:.7rem}
+
+.rec-summary{
+  margin:0 0 1.4rem;padding:1rem 1.2rem;border-left:3px solid var(--rose);
+  background:rgba(196,92,106,.08);color:var(--cream);font-size:.95rem;
+}
+.products{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
+.product{
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  background:var(--bg-soft);transition:transform .35s,border-color .35s;display:flex;flex-direction:column;
+}
+.product:hover{transform:translateY(-6px);border-color:rgba(212,165,116,.35)}
+.product-img{aspect-ratio:1;position:relative;overflow:hidden;background:#1a1210}
+.product-img img{width:100%;height:100%;object-fit:cover;transition:transform .7s}
+.product:hover .product-img img{transform:scale(1.05)}
+.product-cat{
+  position:absolute;top:.8rem;left:.8rem;padding:.3rem .65rem;border-radius:999px;
+  background:rgba(20,14,12,.75);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--sand);
+}
+.product-body{padding:1.15rem;display:flex;flex-direction:column;flex:1}
+.product-brand{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--rose);margin-bottom:.3rem}
+.product h4{font-size:1.05rem;font-weight:500;margin-bottom:.35rem}
+.product .reason{font-size:.8rem;color:var(--muted);font-weight:300;line-height:1.6;flex:1;margin-bottom:.9rem}
+.product-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem}
+.product-price{color:var(--sand);font-size:1.15rem;font-weight:500}
+.product-diff{font-size:.68rem;color:var(--muted)}
+.shop-row{display:flex;gap:.4rem;flex-wrap:wrap}
+.shop-row a{
+  flex:1;min-width:70px;text-align:center;padding:.55rem .4rem;border-radius:999px;
+  border:1px solid var(--line);font-size:.65rem;letter-spacing:.06em;color:var(--muted);transition:.3s;
+}
+.shop-row a:hover{background:var(--sand);border-color:var(--sand);color:var(--bg)}
+.catalog-note{margin-top:1.2rem;font-size:.78rem;color:var(--muted)}
+
+.split-visual{display:grid;grid-template-columns:1.05fr .95fr;gap:1.4rem;align-items:center}
+.visual-stack{display:grid;gap:.8rem}
+.visual-frame{border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);position:relative;aspect-ratio:16/10;background:#0d0908}
+.visual-frame img{width:100%;height:100%;object-fit:cover}
+.visual-frame .label{
+  position:absolute;left:1rem;bottom:1rem;padding:.35rem .7rem;border-radius:999px;
+  background:rgba(20,14,12,.75);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--sand);
+}
+.step-pills{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}
+.step-pills button{
+  padding:.55rem 1rem;border-radius:999px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);cursor:pointer;font-size:.72rem;transition:.3s;
+}
+.step-pills button.active,.step-pills button:hover{border-color:var(--rose);color:var(--ink);background:rgba(196,92,106,.12)}
+
+.ba-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.ba-slot{
+  border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg-soft);
+  aspect-ratio:3/4;position:relative;cursor:pointer;
+}
+.ba-slot img{width:100%;height:100%;object-fit:cover}
+.ba-slot .tag{
+  position:absolute;top:.7rem;left:.7rem;z-index:2;padding:.25rem .55rem;border-radius:999px;
+  background:rgba(20,14,12,.75);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--sand);
+}
+.ba-slot .ph{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  gap:.35rem;padding:1.1rem;color:#fff;text-align:center;
+  background:linear-gradient(180deg,rgba(20,14,12,.08) 15%,rgba(20,14,12,.88) 100%),url("/static/images/ui/before-ref.jpg?v=8") center/cover;
+}
+.ba-slot#afterSlot .ph{
+  background:linear-gradient(180deg,rgba(20,14,12,.08) 15%,rgba(20,14,12,.88) 100%),url("/static/images/ui/after-ref.jpg?v=8") center/cover;
+}
+.ba-slot .ph small{font-size:.7rem;color:rgba(247,240,232,.75);font-weight:300}
+
+.quote{
+  margin-top:1.2rem;padding:1.1rem 1.2rem;border-radius:14px;
+  background:rgba(212,165,116,.08);border:1px solid rgba(212,165,116,.18);
+  font-size:.9rem;color:var(--cream);font-style:italic;
+}
+
+.camera-stage{
+  position:relative;width:100%;aspect-ratio:16/10;border-radius:14px;overflow:hidden;
+  background:#0a0706;border:1px solid var(--line);margin-bottom:1rem;
+}
+.camera-stage video,.camera-stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.camera-stage canvas{pointer-events:none;z-index:2}
+.camera-stage .cam-idle{
+  position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:.5rem;color:var(--muted);
+  background:linear-gradient(160deg,rgba(20,14,12,.55),rgba(20,14,12,.82)),url("/static/images/ui/coach-main.jpg") center/cover;
+}
+.cam-hud{
+  position:absolute;left:0;right:0;bottom:0;z-index:3;padding:1rem 1.1rem .95rem;
+  background:linear-gradient(transparent,rgba(0,0,0,.82));
+  display:flex;flex-direction:column;gap:.35rem;pointer-events:none;
+}
+.cam-hud .step{font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--sand)}
+.cam-hud .tip{font-size:.95rem;font-weight:500;color:#fff}
+.cam-hud .fb{
+  font-size:.8rem;color:rgba(247,240,232,.9);padding:.45rem .75rem;border-radius:999px;
+  background:rgba(196,92,106,.28);border:1px solid rgba(196,92,106,.35);align-self:flex-start;max-width:100%;
+}
+.cam-hud .fb.ok{background:rgba(80,140,100,.35);border-color:rgba(120,180,130,.45)}
+.cam-markers{position:absolute;top:.8rem;left:.8rem;z-index:3;pointer-events:none;display:flex;flex-direction:column;gap:.35rem}
+.cam-markers span,.cam-pose,#camZoneNow{
+  font-size:.62rem;letter-spacing:.08em;padding:.3rem .55rem;border-radius:999px;
+  background:rgba(20,14,12,.75);border:1px solid rgba(212,165,116,.35);color:var(--sand);align-self:flex-start;
+}
+.cam-pose.ok{border-color:rgba(120,180,130,.55);color:#b8e0c0}
+.cam-pose.warn{border-color:rgba(255,200,120,.55);color:#ffd9a0}
+.cam-pose.bad{border-color:rgba(255,120,140,.55);color:#ffb0bc}
+#camZoneNow{font-size:.72rem;color:#fff;border-color:rgba(196,92,106,.5);background:rgba(196,92,106,.35)}
+.coach-progress-wrap{margin:0 0 .85rem}
+.coach-progress-track{height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.coach-progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--rose),var(--sand));transition:width .35s ease}
+.coach-progress-text{font-size:.68rem;color:var(--muted);margin-top:.35rem;text-align:center}
+.coach-flow{
+  display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin:0 0 1rem;font-size:.72rem;color:var(--muted);
+}
+.coach-flow span{
+  padding:.4rem .75rem;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03);
+}
+.coach-flow span.on{border-color:var(--rose);color:var(--sand);background:rgba(196,92,106,.12)}
+.coach-steps{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin:0 0 .9rem}
+.coach-steps button{
+  flex:1;min-width:90px;max-width:160px;padding:.7rem .6rem;border-radius:12px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);cursor:pointer;font-size:.78rem;transition:.3s;
+}
+.coach-steps button strong{display:block;color:var(--ink);font-size:.9rem;margin-bottom:.15rem;font-weight:500}
+.coach-steps button.active,.coach-steps button:hover{border-color:var(--rose);color:var(--sand);background:rgba(196,92,106,.1)}
+.coach-main-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;margin-top:.2rem}
+.coach-main-actions .cam-btn.primary{min-width:180px;padding:.85rem 1.6rem;font-size:.78rem}
+.coach-sub{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:.7rem}
+.coach-sub .cam-btn{opacity:.75;font-size:.65rem;padding:.5rem .9rem}
+
+footer{margin-top:2rem;padding:3.5rem 2rem 2rem;border-top:1px solid var(--line);text-align:center}
+.footer-brand{font-family:Georgia,"Songti SC",serif;font-size:1.8rem;margin-bottom:.4rem}
+.footer-brand span{color:var(--rose)}
+.footer-desc{color:var(--muted);font-size:.78rem;margin-bottom:1.4rem}
+.footer-links{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.4rem}
+.footer-links a{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;opacity:.5}
+.footer-links a:hover{opacity:1;color:var(--sand)}
+.copyright{font-size:.6rem;color:rgba(247,240,232,.28)}
+
+.fade-in{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);backdrop-filter:blur(16px);
+  display:none;align-items:center;justify-content:center;padding:1rem;
+}
+.modal-overlay.active{display:flex}
+.modal-content{
+  background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--radius);
+  padding:2rem;max-width:720px;width:100%;max-height:88vh;overflow-y:auto;position:relative;
+}
+.modal-content.wide{max-width:860px}
+.modal-close{position:absolute;top:.9rem;right:1.1rem;background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer}
+.modal-title{font-size:1.25rem;margin-bottom:1.1rem}
+.modal-title span{color:var(--sand)}
+.cam-controls{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+.cam-btn{
+  padding:.65rem 1.2rem;border-radius:999px;border:1px solid var(--line);
+  background:transparent;color:var(--ink);font-size:.7rem;letter-spacing:.08em;cursor:pointer;transition:.3s;
+}
+.cam-btn:hover{border-color:var(--sand);color:var(--sand)}
+.cam-btn.primary{background:var(--rose);border-color:var(--rose);color:#fff}
+.cam-btn.active{border-color:var(--rose);color:var(--sand)}
+.guide-steps{display:flex;flex-direction:column;gap:.65rem;margin-top:1.1rem}
+.guide-step{
+  display:flex;align-items:center;gap:.8rem;padding:.7rem 1rem;
+  background:rgba(255,255,255,.03);border-radius:12px;border-left:3px solid var(--rose);
+  font-size:.85rem;font-weight:300;
+}
+.guide-step .n{
+  width:24px;height:24px;border-radius:50%;background:rgba(196,92,106,.18);
+  color:var(--sand);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;
+}
+.sr-live{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.hidden-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.result-body{
+  white-space:pre-wrap;font-size:.9rem;line-height:1.75;color:var(--muted);
+  background:rgba(255,255,255,.03);border:1px solid var(--line);
+  border-radius:12px;padding:1.1rem;max-height:45vh;overflow:auto;
+}
+.result-body h2,.result-body h3{color:var(--ink);margin:1rem 0 .35rem;font-size:1rem}
+
+@media(max-width:960px){
+  .story-strip,.products{grid-template-columns:1fr 1fr}
+  .audience,.studio,.split-visual{grid-template-columns:1fr}
+  nav{padding:1rem 1.2rem}
+  .nav-links,.nav-cta{display:none}
+  .nav-toggle{display:flex}
+  .nav-links.open{
+    display:flex;flex-direction:column;position:absolute;top:100%;right:1rem;
+    background:rgba(20,14,12,.96);padding:1.2rem 1.4rem;border:1px solid var(--line);
+    border-radius:12px;gap:1rem;min-width:180px;
+  }
+}
+@media(max-width:600px){
+  .section{padding:3.5rem 1.1rem}
+  .story-strip,.products,.ba-grid{grid-template-columns:1fr}
+  .hero-inner{padding:6rem 1.2rem 3.2rem}
+  .journey{top:56px}
+}
+</style>
+</head>
+<body>
+<div class="sr-live" id="srLive" aria-live="polite"></div>
+<div class="api-pill" id="apiPill">API 检测中…</div>
+
+<input class="hidden-file" id="fileAnalyze" type="file" accept="image/*">
+<input class="hidden-file" id="fileBefore" type="file" accept="image/*">
+<input class="hidden-file" id="fileAfter" type="file" accept="image/*">
+
+<div class="a11y-bar" role="toolbar" aria-label="无障碍辅助工具">
+  <button type="button" id="btnFont" aria-pressed="false">大字号</button>
+  <button type="button" id="btnContrast" aria-pressed="false">高对比</button>
+  <button type="button" id="btnSpeak" aria-pressed="false">语音导览</button>
+</div>
+
+<div id="preloader" aria-hidden="true"><div class="preloader-text">WOW</div></div>
+
+<nav id="nav">
+  <a class="nav-logo" href="#hero">WOW!<span>美炸了</span></a>
+  <button class="nav-toggle" id="navToggle" aria-label="打开菜单"><span></span><span></span><span></span></button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#audience">为谁</a></li>
+    <li><a href="#feature1">分析</a></li>
+    <li><a href="#feature2">选品</a></li>
+    <li><a href="#feature3">教练</a></li>
+    <li><a href="#feature4">成长</a></li>
+  </ul>
+  <a class="nav-cta" href="#feature1">开始分析</a>
+</nav>
+
+<section class="hero" id="hero">
+  <div class="hero-media" aria-hidden="true"></div>
+  <div class="hero-inner">
+    <h1 class="hero-brand">WOW!<br><em>美炸了</em></h1>
+    <p class="hero-desc">看懂你的脸，匹配欧莱雅好上手产品，镜头上标出该涂哪里，并实时告诉你做得怎么样。</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#feature1">上传素颜 · 开始分析</a>
+      <a class="btn btn-ghost" href="#feature3">打开镜头教练</a>
+    </div>
+  </div>
+</section>
+
+<div class="journey" aria-label="四步闭环导航">
+  <div class="journey-track">
+    <a href="#feature1" data-step-nav="1"><strong>01 看见自己</strong>面部分析</a>
+    <a href="#feature2" data-step-nav="2"><strong>02 安心选购</strong>欧莱雅匹配</a>
+    <a href="#feature3" data-step-nav="3"><strong>03 手把手学</strong>镜头教练</a>
+    <a href="#feature4" data-step-nav="4"><strong>04 看见成长</strong>妆前妆后</a>
+  </div>
+</div>
+
+<section class="section" id="audience">
+  <div class="section-head fade-in">
+    <span class="caps">Boundless Explorer · 无界体验家</span>
+    <h2 class="serif">美，应该对<br>每个人友好</h2>
+    <p>赛题三要的不是更贵滤镜，而是可感知、可跟随、可完成的包容性体验。</p>
+  </div>
+  <div class="audience fade-in">
+    <div class="audience-hero">
+      <div class="copy">
+        <span class="caps">For everyone</span>
+        <h3 class="serif">四类真实用户，一套可演示闭环</h3>
+      </div>
+    </div>
+    <div class="audience-list">
+      <article class="audience-item">
+        <img src="/static/images/ui/user-beginner.jpg?v=4" alt="化妆零基础用户" onerror="this.src='/static/images/products/fallback.svg'">
+        <div><h4>化妆零基础</h4><p>没人教、怕画花 → 镜头标部位 + 温和纠错</p></div>
+      </article>
+      <article class="audience-item">
+        <img src="/static/images/ui/user-a11y.jpg?v=4" alt="需要大字辅助的用户" onerror="this.src='/static/images/products/fallback.svg'">
+        <div><h4>看屏幕费劲的人</h4><p>大字号 / 高对比 / 语音导览，跟得上步骤</p></div>
+      </article>
+      <article class="audience-item">
+        <img src="/static/images/ui/user-hands.jpg?v=4" alt="手不够稳的用户" onerror="this.src='/static/images/products/fallback.svg'">
+        <div><h4>手不够稳的人</h4><p>慢节奏拆解，降低精细操作与记忆负担</p></div>
+      </article>
+      <article class="audience-item">
+        <img src="/static/images/ui/user-student.jpg?v=4" alt="忙碌新手学生" onerror="this.src='/static/images/products/fallback.svg'">
+        <div><h4>忙碌学生 / 新手</h4><p>按脸况推荐欧莱雅入门品，少踩雷少浪费</p></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="story-strip fade-in">
+    <a class="story-tile" href="#feature1">
+      <img src="/static/images/ui/step-see.jpg?v=4" alt="看见自己：面部分析" onerror="this.src='/static/images/products/fallback.svg'">
+      <figcaption><span class="caps">Step 01</span><h3>看见自己</h3></figcaption>
+    </a>
+    <a class="story-tile" href="#feature2">
+      <img src="/static/images/ui/step-shop.jpg?v=4" alt="安心选购：欧莱雅产品" onerror="this.src='/static/images/products/fallback.svg'">
+      <figcaption><span class="caps">Step 02</span><h3>安心选购</h3></figcaption>
+    </a>
+    <a class="story-tile" href="#feature3">
+      <img src="/static/images/ui/step-coach.jpg?v=4" alt="手把手学：镜头教练" onerror="this.src='/static/images/products/fallback.svg'">
+      <figcaption><span class="caps">Step 03</span><h3>手把手学</h3></figcaption>
+    </a>
+    <a class="story-tile" href="#feature4">
+      <img src="/static/images/ui/step-grow.jpg?v=4" alt="看见成长：妆前妆后" onerror="this.src='/static/images/products/fallback.svg'">
+      <figcaption><span class="caps">Step 04</span><h3>看见成长</h3></figcaption>
+    </a>
+  </div>
+</section>
+
+<section class="section" id="feature1">
+  <div class="section-head fade-in">
+    <span class="caps">Step 01 · 看见自己</span>
+    <h2 class="serif">先读懂你的脸<br>再谈变美</h2>
+    <p>上传素颜照，AI 给出优点优先的分析，并自动跳转到欧莱雅个性化选品。</p>
+  </div>
+  <div class="studio fade-in">
+    <div class="panel">
+      <div class="panel-media" id="analyzePreview">
+        <div class="empty"><span class="caps">Your selfie</span><span>点击下方上传素颜 / 半妆照片</span></div>
+      </div>
+      <div class="panel-body">
+        <h3 class="serif">上传一张真实的脸</h3>
+        <p>光线均匀、正脸最佳。我们不做羞辱式打分，只告诉你哪里已经很好看。</p>
+        <button class="btn btn-primary" type="button" id="btnAnalyze">上传照片开始分析</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-body" style="height:100%;display:flex;flex-direction:column">
+        <span class="caps" style="color:var(--sand)">AI Beauty Report</span>
+        <h3 class="serif" style="margin:.5rem 0">你的优点报告</h3>
+        <div class="status-line" id="analyzeStatus">等待上传…</div>
+        <div class="analysis-box" id="analyzeBox" style="flex:1">上传照片后，这里会显示温暖、可执行的分析结果。</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem">
+          <button class="btn btn-sand" type="button" id="btnGoRecommend" disabled>根据脸况推荐欧莱雅 →</button>
+          <button class="btn btn-ghost" type="button" id="btnSpeakAnalyze">语音朗读</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="feature2" style="padding-top:3rem">
+  <div class="section-head fade-in">
+    <span class="caps">Step 02 · 安心选购 · L'Oréal</span>
+    <h2 class="serif">按你的脸<br>匹配欧莱雅</h2>
+    <p>产品图全部来自本地图库，不会裂图。每张卡片可直达淘宝、京东、抖音搜索。</p>
+  </div>
+  <div class="fade-in">
+    <div class="rec-summary" id="recSummary">先完成「看见自己」分析，或直接浏览下方欧莱雅入门精选。</div>
+    <div class="status-line" id="recStatus"></div>
+    <div class="products" id="productGrid"></div>
+    <p class="catalog-note">提示：点击「淘宝 / 京东 / 抖音」会跳转搜索对应欧莱雅产品。</p>
+    <div style="display:flex;justify-content:space-between;align-items:end;gap:1rem;margin:1.5rem 0 1rem;flex-wrap:wrap">
+      <h3 class="serif" style="font-size:1.6rem">欧莱雅入门精选</h3>
+      <button class="btn btn-ghost" type="button" id="btnLoadCatalog">刷新全部产品</button>
+    </div>
+    <div class="products" id="catalogGrid"></div>
+  </div>
+</section>
+
+<section class="section" id="feature3">
+  <div class="section-head fade-in">
+    <span class="caps">Step 03 · 手把手学</span>
+    <h2 class="serif">三步跟上<br>镜头教练</h2>
+    <p>选步骤 → 开摄像头 → 跟着脸上高亮涂。链路简单，一次只做一件事。</p>
+  </div>
+  <div class="split-visual fade-in">
+    <div class="visual-frame">
+      <img src="/static/images/ui/coach-main.jpg" alt="化妆品与上妆示意" onerror="this.src='/static/images/products/fallback.svg'">
+      <span class="label">跟着高亮涂</span>
+    </div>
+    <div>
+      <ol style="list-style:none;display:grid;gap:.8rem;margin:0 0 1.4rem;padding:0;color:var(--muted);font-weight:300">
+        <li><strong style="color:var(--sand)">1</strong>　选你要练的步骤（底妆 / 眼妆 / 唇妆）</li>
+        <li><strong style="color:var(--sand)">2</strong>　打开摄像头，把正脸对准画面</li>
+        <li><strong style="color:var(--sand)">3</strong>　看高亮部位涂，屏幕会给你一句反馈</li>
+      </ol>
+      <button class="btn btn-primary" type="button" onclick="openCameraModal()">开始镜头练习</button>
+      <div class="quote" id="coachHint" style="margin-top:1rem">点按钮后进入练习：先选步骤，再开摄像头。</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="feature4">
+  <div class="section-head fade-in">
+    <span class="caps">Step 04 · 看见成长</span>
+    <h2 class="serif">每一次尝试<br>都值得被庆祝</h2>
+    <p>左侧是素颜状态，右侧是完成妆容——上传你自己的前后照片，AI 鼓励并给一条微调建议。</p>
+  </div>
+  <div class="split-visual fade-in">
+    <div>
+      <div class="ba-grid">
+        <div class="ba-slot" id="beforeSlot" role="button" tabindex="0" aria-label="上传妆前照片">
+          <span class="tag">Before · 素颜</span>
+          <div class="ph">
+            <span class="caps">妆前</span>
+            <span>点击上传你的素颜照</span>
+            <small>含义：未上妆的真实状态</small>
+          </div>
+        </div>
+        <div class="ba-slot" id="afterSlot" role="button" tabindex="0" aria-label="上传妆后照片">
+          <span class="tag">After · 完成妆</span>
+          <div class="ph">
+            <span class="caps">妆后</span>
+            <span>点击上传完成后的妆容</span>
+            <small>含义：底妆 / 眼妆 / 唇妆完成后</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3 class="serif" style="font-size:1.8rem;margin-bottom:.6rem">对比不是审判，是成长记录</h3>
+      <p style="color:var(--muted);font-weight:300;margin-bottom:1rem">先传妆前，再传妆后。示例图仅作「素颜 vs 完成妆」含义示意。</p>
+      <div class="status-line" id="compareStatus">等待两张照片…</div>
+      <div class="analysis-box" id="compareBox" style="max-height:220px;margin-bottom:1rem">对比结果会显示在这里。</div>
+      <button class="btn btn-primary" type="button" id="btnCompareRun">开始 AI 对比</button>
+      <button class="btn btn-ghost" type="button" id="btnSpeakCompare" style="margin-left:.5rem">语音朗读</button>
+    </div>
+  </div>
+</section>
+
+<div class="modal-overlay" id="cameraModal" role="dialog" aria-modal="true" aria-labelledby="cameraTitle">
+  <div class="modal-content wide">
+    <button class="modal-close" onclick="closeCameraModal()" aria-label="关闭">✕</button>
+    <div class="modal-title" id="cameraTitle">镜头练习 — <span id="camStepTitle">底妆</span></div>
+    <div class="coach-flow" id="coachFlow">
+      <span class="on" data-flow="1">① 选步骤</span>
+      <span data-flow="2">② 开摄像头</span>
+      <span data-flow="3">③ 跟着高亮涂</span>
+    </div>
+    <div class="coach-steps">
+      <button type="button" data-step="1" class="active"><strong>底妆</strong>涂全脸</button>
+      <button type="button" data-step="2"><strong>眼妆</strong>眼影区</button>
+      <button type="button" data-step="3"><strong>唇妆</strong>唇形</button>
+    </div>
+    <div class="coach-progress-wrap">
+      <div class="coach-progress-track"><div class="coach-progress-bar" id="coachProgressBar"></div></div>
+      <div class="coach-progress-text" id="coachProgressText">等待开始</div>
+    </div>
+    <div class="camera-stage" id="cameraStage">
+      <div class="cam-idle" id="camIdle">
+        <span>◉</span>
+        <span>选好步骤后，点下方「开始练习」</span>
+      </div>
+      <video id="camVideo" playsinline muted autoplay style="display:none"></video>
+      <canvas id="camOverlay"></canvas>
+      <div class="cam-markers" id="camMarkers">
+        <span>等待开始</span>
+        <span class="cam-pose" id="camPoseBadge">未开摄像头</span>
+        <span id="camZoneNow">现在涂：—</span>
+      </div>
+      <div class="cam-hud">
+        <div class="step" id="camHudStep">STEP 01 · 底妆</div>
+        <div class="tip" id="camHudTip">把脸放到画面中央的椭圆里</div>
+        <div class="fb" id="camHudFb">金色高亮 = 现在要涂的部位</div>
+      </div>
+    </div>
+    <div class="coach-main-actions">
+      <button class="cam-btn primary" id="startCameraBtn" type="button" onclick="startCamera()">▶ 开始练习</button>
+      <button class="cam-btn" type="button" id="btnNextStep">下一步</button>
+      <button class="cam-btn" type="button" onclick="closeCameraModal()">结束</button>
+    </div>
+    <div class="coach-sub">
+      <button class="cam-btn" type="button" id="btnCoachStep">听 AI 详细说一遍</button>
+      <button class="cam-btn" type="button" onclick="speakGuide()">语音读提示</button>
+    </div>
+    <div class="status-line" id="coachStatus" style="text-align:center;margin-top:.8rem"></div>
+    <div class="guide-steps" id="guideSteps" hidden>
+      <div class="guide-step"><div class="n">1</div><span>底妆：高亮额头、双颊、下巴——由内向外推开粉底。</span></div>
+      <div class="guide-step"><div class="n">2</div><span>眼妆：高亮双眼睑与眼尾——先浅色打底，再加深外眼角。</span></div>
+      <div class="guide-step"><div class="n">3</div><span>唇妆：高亮唇峰与嘴角——沿唇形轻轻描。</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeResultModal()" aria-label="关闭">✕</button>
+    <div class="modal-title">AI 结果 — <span id="resultKind">分析</span></div>
+    <div class="status-line" id="resultStatus"></div>
+    <div class="result-body" id="resultBody">等待结果…</div>
+    <div class="cam-controls" style="margin-top:1.1rem">
+      <button class="cam-btn" type="button" onclick="speakResult()">语音朗读</button>
+      <button class="cam-btn" type="button" onclick="closeResultModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand">WOW!<span>美炸了</span></div>
+  <div class="footer-desc">欧莱雅美妆科技黑客松 · 赛题三「无界体验家」· 分析 → 欧莱雅选品 → 镜头教练 → 对比</div>
+  <div class="footer-links">
+    <a href="#audience">为谁而做</a>
+    <a href="#feature1">看见自己</a>
+    <a href="#feature2">安心选购</a>
+    <a href="#feature3">手把手学</a>
+    <a href="#feature4">看见成长</a>
+  </div>
+  <div class="copyright">© 2026 WOW!美炸了 · 本地图片库 /static/images</div>
+</footer>
+
+<script src="/static/coach.js?v=4"></script>
+<script>
+var API_BASE = "";
+var lastAnalysisText = "";
+var lastResultText = "";
+var coachStep = 1;
+var beforeFile = null;
+var afterFile = null;
+
+function hidePreloader(){
+  var el = document.getElementById("preloader");
+  if (el) el.classList.add("loaded");
+}
+document.addEventListener("DOMContentLoaded", function () {
+  setTimeout(hidePreloader, 400);
+  checkApiHealth();
+  loadCatalog();
+});
+window.addEventListener("load", hidePreloader);
+setTimeout(hidePreloader, 2000);
+
+var nav = document.getElementById("nav");
+window.addEventListener("scroll", function () {
+  nav.classList.toggle("scrolled", window.scrollY > 60);
+  var ids = ["feature1", "feature2", "feature3", "feature4"];
+  var cur = "";
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < 160) cur = id;
+  });
+  document.querySelectorAll("[data-step-nav]").forEach(function (a) {
+    a.classList.toggle("active", a.getAttribute("href") === "#" + cur);
+  });
+});
+
+document.getElementById("navToggle").addEventListener("click", function () {
+  document.getElementById("navLinks").classList.toggle("open");
+});
+document.querySelectorAll("#navLinks a").forEach(function (a) {
+  a.addEventListener("click", function () { document.getElementById("navLinks").classList.remove("open"); });
+});
+
+var observer = new IntersectionObserver(function (entries) {
+  entries.forEach(function (e) { if (e.isIntersecting) e.target.classList.add("visible"); });
+}, { threshold: 0.12 });
+document.querySelectorAll(".fade-in").forEach(function (el) { observer.observe(el); });
+
+function announce(msg) {
+  var live = document.getElementById("srLive");
+  live.textContent = "";
+  setTimeout(function () { live.textContent = msg; }, 40);
+}
+
+function simpleMarkdown(md) {
+  return String(md || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n/g, "<br>");
+}
+
+async function checkApiHealth() {
+  var pill = document.getElementById("apiPill");
+  try {
+    var r = await fetch(API_BASE + "/api/health");
+    var j = await r.json();
+    if (j.api_key_configured) {
+      pill.textContent = "API 已就绪 · " + (j.vl_model || "qwen-vl");
+      pill.className = "api-pill ok";
+    } else {
+      pill.textContent = "请在 .env 填写 DASHSCOPE_API_KEY";
+      pill.className = "api-pill bad";
+    }
+  } catch (e) {
+    pill.textContent = "后端未启动 · 请运行 python server.py";
+    pill.className = "api-pill bad";
+  }
+}
+
+async function postForm(url, formData) {
+  var r = await fetch(API_BASE + url, { method: "POST", body: formData });
+  var j = await r.json().catch(function () { return {}; });
+  if (!r.ok) throw new Error(j.detail || ("请求失败 " + r.status));
+  return j;
+}
+
+function productCardHTML(p) {
+  var links = p.links || {};
+  var img = p.image || "/static/images/products/fallback.svg";
+  return (
+    '<article class="product">' +
+      '<div class="product-img">' +
+        '<img src="' + img + '" alt="' + (p.name || "") + '" loading="lazy" onerror="this.onerror=null;this.src=\'/static/images/products/fallback.svg\'">' +
+        '<span class="product-cat">' + (p.category || "") + '</span>' +
+      '</div>' +
+      '<div class="product-body">' +
+        '<div class="product-brand">' + (p.brand_zh || p.brand || "L'Oréal") + '</div>' +
+        '<h4>' + (p.name || "") + '</h4>' +
+        '<p class="reason">' + (p.reason || p.blurb || "") + '</p>' +
+        '<div class="product-meta"><span class="product-price">' + (p.price || "") + '</span>' +
+        '<span class="product-diff">上手 ' + (p.difficulty || "低") + '</span></div>' +
+        '<div class="shop-row">' +
+          '<a href="' + (links.taobao || "#") + '" target="_blank" rel="noopener">淘宝</a>' +
+          '<a href="' + (links.jd || "#") + '" target="_blank" rel="noopener">京东</a>' +
+          '<a href="' + (links.douyin || "#") + '" target="_blank" rel="noopener">抖音</a>' +
+        '</div>' +
+      '</div>' +
+    '</article>'
+  );
+}
+
+function renderProducts(list, mountId) {
+  var el = document.getElementById(mountId);
+  if (!list || !list.length) {
+    el.innerHTML = '<p style="color:var(--muted)">暂无产品</p>';
+    return;
+  }
+  el.innerHTML = list.map(productCardHTML).join("");
+}
+
+async function loadCatalog() {
+  try {
+    var r = await fetch(API_BASE + "/api/catalog");
+    var j = await r.json();
+    renderProducts(j.products || [], "catalogGrid");
+    if (!document.getElementById("productGrid").innerHTML) {
+      renderProducts((j.products || []).slice(0, 3), "productGrid");
+      document.getElementById("recSummary").textContent = "欧莱雅入门三件套预览（上传素颜后会按你的脸重新匹配）";
+    }
+  } catch (e) {
+    document.getElementById("catalogGrid").innerHTML = '<p style="color:var(--muted)">无法加载产品库，请先启动 python server.py</p>';
+  }
+}
+document.getElementById("btnLoadCatalog").addEventListener("click", loadCatalog);
+
+function setPreview(file, mountId) {
+  var url = URL.createObjectURL(file);
+  document.getElementById(mountId).innerHTML = '<img src="' + url + '" alt="预览">';
+}
+
+document.getElementById("btnAnalyze").addEventListener("click", function () {
+  document.getElementById("fileAnalyze").click();
+});
+
+document.getElementById("fileAnalyze").addEventListener("change", async function () {
+  var file = this.files && this.files[0];
+  this.value = "";
+  if (!file) return;
+  setPreview(file, "analyzePreview");
+  document.getElementById("analyzeStatus").textContent = "正在调用通义视觉，分析你的脸况…";
+  document.getElementById("analyzeBox").textContent = "分析中，请稍候…";
+  document.getElementById("btnGoRecommend").disabled = true;
+  try {
+    var fd = new FormData();
+    fd.append("image", file);
+    var j = await postForm("/api/analyze", fd);
+    lastAnalysisText = j.result || "";
+    lastResultText = lastAnalysisText;
+    document.getElementById("analyzeBox").innerHTML = simpleMarkdown(lastAnalysisText);
+    document.getElementById("analyzeStatus").textContent = "分析完成 · " + (j.model || "qwen-vl");
+    document.getElementById("btnGoRecommend").disabled = false;
+    announce("面部分析已完成，正在匹配欧莱雅产品");
+    await runRecommend(true);
+  } catch (e) {
+    document.getElementById("analyzeStatus").textContent = "失败";
+    document.getElementById("analyzeBox").textContent = "出错了：" + e.message;
+  }
+});
+
+async function runRecommend(autoScroll) {
+  var ctx = lastAnalysisText || "新手暖皮，需要好上手的底妆和唇色，预算百元到两百";
+  document.getElementById("recStatus").textContent = "正在根据脸况匹配欧莱雅产品…";
+  document.getElementById("recSummary").textContent = "匹配中…";
+  try {
+    var fd = new FormData();
+    fd.append("context", ctx);
+    var j = await postForm("/api/recommend", fd);
+    document.getElementById("recSummary").textContent = j.summary || "已为你匹配欧莱雅产品";
+    document.getElementById("recStatus").textContent = "完成 · " + (j.model || "");
+    renderProducts(j.products || [], "productGrid");
+    lastResultText = j.result || j.summary || "";
+    if (autoScroll) document.getElementById("feature2").scrollIntoView({ behavior: "smooth", block: "start" });
+    announce("欧莱雅产品推荐已更新");
+  } catch (e) {
+    document.getElementById("recStatus").textContent = "失败：" + e.message;
+  }
+}
+document.getElementById("btnGoRecommend").addEventListener("click", function () { runRecommend(true); });
+document.getElementById("btnSpeakAnalyze").addEventListener("click", function () {
+  if (!lastAnalysisText) { alert("还没有分析结果"); return; }
+  speakText(lastAnalysisText.replace(/[#*]/g, " "));
+});
+
+document.querySelectorAll("[data-step]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    coachStep = parseInt(btn.getAttribute("data-step"), 10) || 1;
+    if (typeof onCoachStepChanged === "function") onCoachStepChanged();
+    else if (typeof updateStepUI === "function") updateStepUI();
+    var m = (typeof STEP_META !== "undefined" && STEP_META[coachStep]) || { tip: "", title: "" };
+    var hint = document.getElementById("coachHint");
+    if (hint) hint.textContent = "当前：" + (m.title || "") + "。点「开始练习」，金色区就是现在要涂的地方。";
+    var st = document.getElementById("coachStatus");
+    if (st) st.textContent = "已选：" + (m.title || ("步骤 " + coachStep));
+  });
+});
+
+async function runCoach() {
+  var status = document.getElementById("coachStatus");
+  var hint = document.getElementById("coachHint");
+  if (status) status.textContent = "AI 正在生成第 " + coachStep + " 步指导…";
+  hint.textContent = "生成中…";
+  try {
+    var fd = new FormData();
+    fd.append("step", String(coachStep));
+    fd.append("note", "");
+    var j = await postForm("/api/coach", fd);
+    if (status) status.textContent = "第 " + j.step_name + " 指导已更新";
+    hint.textContent = j.result || "";
+    lastResultText = j.result || "";
+    showResult("AI 教练 · " + j.step_name, j.result, "模型：" + (j.model || ""));
+  } catch (e) {
+    if (status) status.textContent = "失败：" + e.message;
+    hint.textContent = "调用失败：" + e.message;
+  }
+}
+var btnCoachStep = document.getElementById("btnCoachStep");
+if (btnCoachStep) btnCoachStep.addEventListener("click", runCoach);
+
+function setSlotImage(slotId, file) {
+  var url = URL.createObjectURL(file);
+  var slot = document.getElementById(slotId);
+  var tagText = slotId === "beforeSlot" ? "Before · 素颜" : "After · 完成妆";
+  slot.innerHTML = '<span class="tag">' + tagText + '</span><img src="' + url + '" alt="' + tagText + '">';
+}
+document.getElementById("beforeSlot").addEventListener("click", function () { document.getElementById("fileBefore").click(); });
+document.getElementById("afterSlot").addEventListener("click", function () { document.getElementById("fileAfter").click(); });
+document.getElementById("fileBefore").addEventListener("change", function () {
+  var f = this.files && this.files[0];
+  if (!f) return;
+  beforeFile = f;
+  setSlotImage("beforeSlot", f);
+  document.getElementById("compareStatus").textContent = afterFile ? "两张照片已就绪，可以开始对比" : "妆前已上传，请再上传妆后";
+});
+document.getElementById("fileAfter").addEventListener("change", function () {
+  var f = this.files && this.files[0];
+  if (!f) return;
+  afterFile = f;
+  setSlotImage("afterSlot", f);
+  document.getElementById("compareStatus").textContent = beforeFile ? "两张照片已就绪，可以开始对比" : "妆后已上传，请再上传妆前";
+});
+
+document.getElementById("btnCompareRun").addEventListener("click", async function () {
+  if (!beforeFile || !afterFile) { alert("请先上传妆前和妆后两张照片"); return; }
+  document.getElementById("compareStatus").textContent = "正在对比两张照片…";
+  document.getElementById("compareBox").textContent = "对比中…";
+  try {
+    var fd = new FormData();
+    fd.append("before", beforeFile);
+    fd.append("after", afterFile);
+    var j = await postForm("/api/compare", fd);
+    lastResultText = j.result || "";
+    document.getElementById("compareBox").innerHTML = simpleMarkdown(j.result);
+    document.getElementById("compareStatus").textContent = "完成 · " + (j.model || "");
+    announce("妆前妆后对比完成");
+  } catch (e) {
+    document.getElementById("compareStatus").textContent = "失败";
+    document.getElementById("compareBox").textContent = "出错了：" + e.message;
+  }
+});
+document.getElementById("btnSpeakCompare").addEventListener("click", function () {
+  var t = document.getElementById("compareBox").innerText;
+  if (!t || t.indexOf("会显示") >= 0) { alert("还没有对比结果"); return; }
+  speakText(t);
+});
+
+function showResult(kind, text, status) {
+  lastResultText = text || "";
+  document.getElementById("resultKind").textContent = kind;
+  document.getElementById("resultStatus").textContent = status || "完成";
+  document.getElementById("resultBody").innerHTML = simpleMarkdown(text);
+  document.getElementById("resultModal").classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+function closeResultModal() {
+  document.getElementById("resultModal").classList.remove("active");
+  if (!document.getElementById("cameraModal").classList.contains("active")) document.body.style.overflow = "";
+}
+document.getElementById("resultModal").addEventListener("click", function (e) {
+  if (e.target === e.currentTarget) closeResultModal();
+});
+function speakResult() {
+  if (!lastResultText) { alert("还没有可朗读的结果"); return; }
+  speakText(lastResultText.replace(/[#*]/g, " "));
+}
+
+var btnFont = document.getElementById("btnFont");
+var btnContrast = document.getElementById("btnContrast");
+var btnSpeak = document.getElementById("btnSpeak");
+var speaking = false;
+
+btnFont.addEventListener("click", function () {
+  var on = document.body.classList.toggle("large-text");
+  btnFont.classList.toggle("active", on);
+  btnFont.setAttribute("aria-pressed", on ? "true" : "false");
+  announce(on ? "已开启大字号" : "已关闭大字号");
+});
+btnContrast.addEventListener("click", function () {
+  var on = document.body.classList.toggle("high-contrast");
+  btnContrast.classList.toggle("active", on);
+  btnContrast.setAttribute("aria-pressed", on ? "true" : "false");
+  announce(on ? "已开启高对比模式" : "已关闭高对比模式");
+});
+
+function speakText(text) {
+  if (!("speechSynthesis" in window)) { alert("请改用 Chrome / Edge 以支持语音播报"); return; }
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = "zh-CN";
+  u.rate = 0.95;
+  speaking = true;
+  btnSpeak.classList.add("active");
+  u.onend = function () { speaking = false; btnSpeak.classList.remove("active"); };
+  window.speechSynthesis.speak(u);
+}
+btnSpeak.addEventListener("click", function () {
+  if (speaking) {
+    window.speechSynthesis.cancel();
+    speaking = false;
+    btnSpeak.classList.remove("active");
+    return;
+  }
+  speakText("欢迎使用 WOW 美炸了。上传素颜后会推荐欧莱雅产品，打开摄像头可看到涂抹部位高亮和实时反馈。美，应该对每个人友好。");
+});
+function speakGuide() {
+  var steps = [].map.call(document.querySelectorAll("#guideSteps .guide-step span"), function (s) { return s.innerText; });
+  speakText("现在开始化妆步骤引导。" + steps.join("。下一步，"));
+}
+</script>
+</body>
+</html>

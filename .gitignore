@@ -1,0 +1,12 @@
+﻿.env
+*.pem
+key.pem
+cert.pem
+__pycache__/
+*.pyc
+.venv/
+venv/
+_*.py
+*.bat
+.DS_Store
+Thumbs.db
